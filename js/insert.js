@@ -2,23 +2,27 @@
 console.log("注入成功");
 // todo 添加一个文字选择器, 根据文字查找dom (css选择器, 文字过滤)
 // todo 全部改为 await, 按步骤顺序向下执行函数(执行完成 resolve(true))
-(function () {
+
+(async function () {
   let signinSuccess = false;
   let lotterySuccess = false;
   // fun return true 继续执行, 后续可改造为生成器
   const loopFunction = function (fun, finished, time = 1500, count = 6) {
-    let currentCount = 0;
-    const loop = () => {
-      setTimeout(function () {
-        if (currentCount < count && fun()) {
-          currentCount++;
-          loop();
-        } else {
-          finished && finished();
-        }
-      }, time);
-    };
-    loop();
+    return new Promise((resolve, reject) => {
+      let currentCount = 0;
+      const loop = () => {
+        setTimeout(function () {
+          if (currentCount < count && fun()) {
+            currentCount++;
+            loop();
+          } else {
+            finished && finished();
+            resolve();
+          }
+        }, time);
+      };
+      loop();
+    });
   };
   const getStorage = key => {
     return new Promise((resolve, reject) => {
@@ -34,7 +38,12 @@ console.log("注入成功");
   }
   const goSignin = function () {
     const oSignInBtn = document.querySelector(".signin.btn"); //|| document.querySelector(".signedin.btn");
-    oSignInBtn && oSignInBtn.click();
+    if (oSignInBtn) {
+      oSignInBtn && oSignInBtn.click();
+      return false;
+    } else {
+      return true;
+    }
   };
   const getIsSigned = function () {
     const oSigned = document.querySelector(".signedin.btn");
@@ -86,22 +95,22 @@ console.log("注入成功");
     if (getIsnotLogin()) {
       sendMessage("未登录,请先登录");
     }
-    goSignin();
-    loopFunction(
+    await loopFunction(goSignin);
+    await loopFunction(
       () => {
         let num = getOre();
-        var signedin = document.querySelector(".signedin.btn");
-        if (signedin) {
-          signinSuccess = true;
-          return false;
-        }
         if (num) {
+          sendMessage("签到成功, 获得矿石:" + num);
           chrome.storage.sync.get("jj-ore-number", value => {
             chrome.storage.sync.set({ "jj-ore-number": num + value["jj-ore-number"] });
             console.log("累计获得矿石:", num + value["jj-ore-number"]);
           });
           signinSuccess = true;
-          sendMessage("签到成功, 获得矿石:" + num);
+          return false;
+        }
+        var signedin = document.querySelector(".signedin.btn");
+        if (signedin) {
+          signinSuccess = true;
           return false;
         }
         return true;

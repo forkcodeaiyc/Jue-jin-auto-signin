@@ -18,8 +18,14 @@
     "content_scripts": [
         {
             // "matches": ["https://*/*"],
-            "matches": ["https://*.juejin.cn/*"],
-            "js": ["js/insert.js"]
+            "matches": [
+                "https://*.juejin.cn/*"
+            ],
+            "js": [
+                "js/insert.js"
+            ],
+            // 插入时机, 不用document load 或 xxx 事件了
+            "run_at": "document_end"
         }
     ],
     "icons": {},

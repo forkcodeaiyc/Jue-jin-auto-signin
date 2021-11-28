@@ -17,6 +17,12 @@ chrome.runtime.onStartup.addListener(function () {
 //     console.log(response.farewell);
 //   });
 // });
+// 导航完成 tab激活 载入完成事件
+// chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+//   if (changeInfo.status == "complete" && tab.active) {
+//     // do your things
+//   }
+// });
 const getStorage = key => {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(key, value => {
@@ -59,7 +65,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     priority: 2, // 优先级，从 -2 到 2，-2 优先级最低，2 最高，默认为零。
     eventTime: Date.now(),
   };
-  chrome.notifications.create("login", opt, e => {
+  chrome.notifications.create(`login${Date.now()}`, opt, e => {
     console.log(e);
   });
   //   sendResponse({xxx}); 返回消息给请求者
