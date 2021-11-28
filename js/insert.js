@@ -2,7 +2,7 @@
 console.log("注入成功");
 // todo 添加一个文字选择器, 根据文字查找dom (css选择器, 文字过滤)
 // todo 全部改为 await, 按步骤顺序向下执行函数(执行完成 resolve(true))
-
+console.log("readyState: " + document.readyState);
 (async function () {
   let signinSuccess = false;
   let lotterySuccess = false;
