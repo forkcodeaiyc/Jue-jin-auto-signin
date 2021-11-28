@@ -88,12 +88,13 @@ console.log("readyState: " + document.readyState);
       console.log("今日已完成签到、免费抽奖");
       return;
     }
+    if (getIsnotLogin()) {
+      sendMessage("未登录,请先登录");
+      return;
+    }
     //sendMessage("打开tab");
     if (!["/user/center/signin", "/user/center/lottery"].includes(window.location.pathname)) {
       window.location.href = "https://juejin.cn/user/center/signin?from=avatar_menu";
-    }
-    if (getIsnotLogin()) {
-      sendMessage("未登录,请先登录");
     }
     await loopFunction(goSignin);
     await loopFunction(
@@ -146,9 +147,6 @@ console.log("readyState: " + document.readyState);
         );
       }
     );
-
-    // 去抽奖 , 找到父元素 ,再查找 figure-text(矿石数量)
-    // 打开弹窗可能有延迟, 需要写函数能重复延迟执行
   }
 
   init();
