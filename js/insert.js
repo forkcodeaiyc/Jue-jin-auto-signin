@@ -1,6 +1,6 @@
 // document.body.innerHTML = "";
 console.red = function (msg) {
-  console.log("%c" + JSON.stringify(msg), "font-size:36px;color:red;");
+  console.log("%c" + JSON.stringify(msg), "font-size:24px;color:red;");
 };
 console.red("注入成功");
 // todo 添加一个文字选择器, 根据文字查找dom (css选择器, 文字过滤)
@@ -85,44 +85,54 @@ console.red("readyState: " + document.readyState);
   };
   // api 方案
   async function planApi () {
-    const checkIn = await fetch("https://api.juejin.cn/growth_api/v1/check_in", {
-      headers: {
-        cookie: document.cookie,
-      },
-      method: "POST",
-      credentials: "include",
-    }).then(res => res.json());
+    return new Promise((resolve, reject) => {
+      (async function () {
+        try {
+          const checkIn = await fetch("https://api.juejin.cn/growth_api/v1/check_in", {
+            headers: {
+              cookie: document.cookie,
+            },
+            method: "POST",
+            credentials: "include",
+          }).then(res => res.json());
 
-    if (check_in.err_no !== 0) {
-      console.red(checkIn);
-    } else {
-      console.red(`api 签到成功 ${check_in.data.sum_point}`);
-    }
-    // 免费抽奖
-    const draw = await fetch("https://api.juejin.cn/growth_api/v1/lottery/draw", {
-      headers: {
-        cookie: document.cookie,
-      },
-      method: "POST",
-      credentials: "include",
-    }).then(res => res.json());
+          if (checkIn.err_no !== 0) {
+            console.red(checkIn);
+          } else {
+            console.red(`api 签到成功 ${checkIn.data.sum_point}`);
+          }
+          // 免费抽奖
+          const draw = await fetch("https://api.juejin.cn/growth_api/v1/lottery/draw", {
+            headers: {
+              cookie: document.cookie,
+            },
+            method: "POST",
+            credentials: "include",
+          }).then(res => res.json());
 
-    if (draw.err_no !== 0) {
-      console.red("api 免费抽奖失败！");
-    } else {
-      console.red(`恭喜抽到: ${draw.data.lottery_name}`);
-    }
+          if (draw.err_no !== 0) {
+            console.red("api 免费抽奖失败！");
+          } else {
+            console.red(`恭喜抽到: ${draw.data.lottery_name}`);
+          }
+          resolve();
+        } catch (error) {
+          console.error(error);
+          resolve();
+        }
+      })();
+    });
   }
   async function init () {
     console.red(getIsnotLogin() ? "未登录" : "已登录");
     let time = await getStorage("jj_to_day");
+    if (getIsnotLogin()) {
+      sendMessage("未登录,请先登录");
+      return;
+    }
     // todo 继续添加账号id + 日期 共同判断完成情况
     if (isSameDay(time, Date.now())) {
       console.red("今日已完成签到、免费抽奖");
-      return;
-    }
-    if (getIsnotLogin()) {
-      sendMessage("未登录,请先登录");
       return;
     }
     //sendMessage("打开tab");
@@ -131,6 +141,7 @@ console.red("readyState: " + document.readyState);
     }
     await loopFunction(goSignin);
     await loopFunction(() => {
+      let signedin = document.querySelector(".signedin.btn");
       let num = getOre();
       if (num) {
         sendMessage("签到成功, 获得矿石:" + num);
@@ -141,7 +152,6 @@ console.red("readyState: " + document.readyState);
         signinSuccess = true;
         return false;
       }
-      var signedin = document.querySelector(".signedin.btn");
       if (signedin) {
         signinSuccess = true;
         return false;
@@ -172,12 +182,11 @@ console.red("readyState: " + document.readyState);
         }
         return true;
       },
-      () => {
-        chrome.storage.sync.set({ jj_to_day: Date.now() }, function () {});
-      }
+      () => {}
     );
     // 双重加固 😎
-    planApi();
+    await planApi();
+    chrome.storage.sync.set({ jj_to_day: Date.now() }, function () {});
   }
   init();
   // 判断今日是否已执行
