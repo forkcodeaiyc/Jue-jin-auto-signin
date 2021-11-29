@@ -65,7 +65,7 @@ console.red("readyState: " + document.readyState);
   };
   const getOre = () => {
     let oText = document.querySelector(".figure-text");
-    return parseInt(oText ? oText.innerText : null);
+    return parseInt(oText ? oText.innerText : 0);
   };
   const goLottery = () => {
     let btn = document.querySelector(".btn-area .btn");
@@ -102,19 +102,20 @@ console.red("readyState: " + document.readyState);
             console.red(`api 签到成功 ${checkIn.data.sum_point}`);
           }
           // 免费抽奖
-          const draw = await fetch("https://api.juejin.cn/growth_api/v1/lottery/draw", {
-            headers: {
-              cookie: document.cookie,
-            },
-            method: "POST",
-            credentials: "include",
-          }).then(res => res.json());
+          //let isFree = document.querySelector(".lottery").innerHTML.indexOf("免费") > -1;
+          // const draw = await fetch("https://api.juejin.cn/growth_api/v1/lottery/draw", {
+          //   headers: {
+          //     cookie: document.cookie,
+          //   },
+          //   method: "POST",
+          //   credentials: "include",
+          // }).then(res => res.json());
 
-          if (draw.err_no !== 0) {
-            console.red("api 免费抽奖失败！");
-          } else {
-            console.red(`恭喜抽到: ${draw.data.lottery_name}`);
-          }
+          // if (draw.err_no !== 0) {
+          //   console.red("api 免费抽奖失败！");
+          // } else {
+          //   console.red(`恭喜抽到: ${draw.data.lottery_name}`);
+          // }
           resolve();
         } catch (error) {
           console.error(error);
@@ -146,8 +147,9 @@ console.red("readyState: " + document.readyState);
       if (num) {
         sendMessage("签到成功, 获得矿石:" + num);
         chrome.storage.sync.get("jj-ore-number", value => {
-          chrome.storage.sync.set({ "jj-ore-number": num + value["jj-ore-number"] });
-          console.red("累计获得矿石: " + (num + value["jj-ore-number"]));
+          let ore = value["jj-ore-number"] || 0;
+          chrome.storage.sync.set({ "jj-ore-number": num + ore });
+          console.red("累计获得矿石: " + (num + ore));
         });
         signinSuccess = true;
         return false;
