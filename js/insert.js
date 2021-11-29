@@ -97,54 +97,50 @@ console.log("readyState: " + document.readyState);
       window.location.href = "https://juejin.cn/user/center/signin?from=avatar_menu";
     }
     await loopFunction(goSignin);
+    await loopFunction(() => {
+      let num = getOre();
+      if (num) {
+        sendMessage("签到成功, 获得矿石:" + num);
+        chrome.storage.sync.get("jj-ore-number", value => {
+          chrome.storage.sync.set({ "jj-ore-number": num + value["jj-ore-number"] });
+          console.log("累计获得矿石:", num + value["jj-ore-number"]);
+        });
+        signinSuccess = true;
+        return false;
+      }
+      var signedin = document.querySelector(".signedin.btn");
+      if (signedin) {
+        signinSuccess = true;
+        return false;
+      }
+      return true;
+    });
+    goLottery();
+    // 改为监听页面url 是目标页面再执行
     await loopFunction(
       () => {
-        let num = getOre();
-        if (num) {
-          sendMessage("签到成功, 获得矿石:" + num);
-          chrome.storage.sync.get("jj-ore-number", value => {
-            chrome.storage.sync.set({ "jj-ore-number": num + value["jj-ore-number"] });
-            console.log("累计获得矿石:", num + value["jj-ore-number"]);
-          });
-          signinSuccess = true;
-          return false;
-        }
-        var signedin = document.querySelector(".signedin.btn");
-        if (signedin) {
-          signinSuccess = true;
+        return lottery();
+      },
+      () => {},
+      1000
+    );
+    await loopFunction(
+      () => {
+        // 查询抽奖结果
+        let result = document.querySelector(".lottery_modal .title");
+        if (result) {
+          sendMessage(result.innerText);
+          // 避免后续目标改动造成程序异常, 不管是否签到抽奖成功程序只执行一次
+          // if(signinSuccess && lotterySuccess){
+
+          // }
+          sendMessage("关闭tab");
           return false;
         }
         return true;
       },
       () => {
-        goLottery();
-        // 改为监听页面url 是目标页面再执行
-        loopFunction(
-          () => {
-            return lottery();
-          },
-          () => {
-            loopFunction(
-              () => {
-                let result = document.querySelector(".lottery_modal .title");
-                if (result) {
-                  sendMessage(result.innerText);
-                  // 避免后续目标改动造成程序异常, 不管是否签到抽奖成功程序只执行一次
-                  // if(signinSuccess && lotterySuccess){
-
-                  // }
-                  sendMessage("关闭tab");
-                  return false;
-                }
-                return true;
-              },
-              () => {
-                chrome.storage.sync.set({ jj_to_day: Date.now() }, function () {});
-              }
-            );
-          },
-          1000
-        );
+        chrome.storage.sync.set({ jj_to_day: Date.now() }, function () {});
       }
     );
   }
