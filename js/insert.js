@@ -1,8 +1,11 @@
 // document.body.innerHTML = "";
-console.log("注入成功");
+console.red = function (msg) {
+  console.log("%c" + JSON.stringify(msg), "font-size:36px;color:red;");
+};
+console.red("注入成功");
 // todo 添加一个文字选择器, 根据文字查找dom (css选择器, 文字过滤)
 // todo 全部改为 await, 按步骤顺序向下执行函数(执行完成 resolve(true))
-console.log("readyState: " + document.readyState);
+console.red("readyState: " + document.readyState);
 (async function () {
   let signinSuccess = false;
   let lotterySuccess = false;
@@ -57,7 +60,7 @@ console.log("readyState: " + document.readyState);
 
   const sendMessage = function (message) {
     chrome.runtime.sendMessage({ message }, function (response) {
-      console.log("response", response);
+      console.red(response);
     });
   };
   const getOre = () => {
@@ -70,7 +73,7 @@ console.log("readyState: " + document.readyState);
   };
   const lottery = () => {
     var btn = document.querySelector(".lottery");
-    console.log("开始免费抽奖", btn && btn.innerHTML.indexOf("免费") > -1);
+    console.red("开始免费抽奖: " + (btn && btn.innerHTML.indexOf("免费") > -1));
     if (btn && btn.innerHTML.indexOf("免费") > -1) {
       btn.querySelector(".lottery-text").click();
       lotterySuccess = true;
@@ -80,12 +83,42 @@ console.log("readyState: " + document.readyState);
     }
     return true;
   };
+  // api 方案
+  async function planApi () {
+    const checkIn = await fetch("https://api.juejin.cn/growth_api/v1/check_in", {
+      headers: {
+        cookie: document.cookie,
+      },
+      method: "POST",
+      credentials: "include",
+    }).then(res => res.json());
+
+    if (check_in.err_no !== 0) {
+      console.red(checkIn);
+    } else {
+      console.red(`api 签到成功 ${check_in.data.sum_point}`);
+    }
+    // 免费抽奖
+    const draw = await fetch("https://api.juejin.cn/growth_api/v1/lottery/draw", {
+      headers: {
+        cookie: document.cookie,
+      },
+      method: "POST",
+      credentials: "include",
+    }).then(res => res.json());
+
+    if (draw.err_no !== 0) {
+      console.red("api 免费抽奖失败！");
+    } else {
+      console.red(`恭喜抽到: ${draw.data.lottery_name}`);
+    }
+  }
   async function init () {
-    console.log(getIsnotLogin() ? "未登录" : "已登录");
+    console.red(getIsnotLogin() ? "未登录" : "已登录");
     let time = await getStorage("jj_to_day");
     // todo 继续添加账号id + 日期 共同判断完成情况
     if (isSameDay(time, Date.now())) {
-      console.log("今日已完成签到、免费抽奖");
+      console.red("今日已完成签到、免费抽奖");
       return;
     }
     if (getIsnotLogin()) {
@@ -103,7 +136,7 @@ console.log("readyState: " + document.readyState);
         sendMessage("签到成功, 获得矿石:" + num);
         chrome.storage.sync.get("jj-ore-number", value => {
           chrome.storage.sync.set({ "jj-ore-number": num + value["jj-ore-number"] });
-          console.log("累计获得矿石:", num + value["jj-ore-number"]);
+          console.red("累计获得矿石: " + (num + value["jj-ore-number"]));
         });
         signinSuccess = true;
         return false;
@@ -143,8 +176,9 @@ console.log("readyState: " + document.readyState);
         chrome.storage.sync.set({ jj_to_day: Date.now() }, function () {});
       }
     );
+    // 双重加固 😎
+    planApi();
   }
-
   init();
   // 判断今日是否已执行
   // 判断是否登录
@@ -155,6 +189,8 @@ console.log("readyState: " + document.readyState);
   // 记录今日已执行
   // 关闭 tab
   // 自动抽奖功能
+  // 自动登录
+  // api 操作
 })();
 
 // 注入脚本(content-script)使用权限有限 大致只能使用以下权限: https://stackoverflow.com/questions/34912279/error-when-using-chrome-notifications-create-uncaught-typeerror-cannot-read-pr
