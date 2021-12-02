@@ -179,7 +179,6 @@ console.red("readyState: " + document.readyState);
           // if(signinSuccess && lotterySuccess){
 
           // }
-          sendMessage("关闭tab");
           return false;
         }
         return true;
@@ -188,7 +187,9 @@ console.red("readyState: " + document.readyState);
     );
     // 双重加固 😎
     await planApi();
-    chrome.storage.sync.set({ jj_to_day: Date.now() }, function () {});
+    chrome.storage.sync.set({ jj_to_day: Date.now() }, function () {
+      sendMessage("关闭tab");
+    });
   }
   init();
   // 判断今日是否已执行
